@@ -51,7 +51,7 @@ Each file represents a **time series** for multiple beams across multiple timest
 
 ---
 
-## 🛠️ Preprocessing Steps
+##  Preprocessing Steps
 
 1. **Data Cleaning** – Handle missing timestamps or NaN values.  
 2. **Resampling** – Align all files to uniform time intervals.  
