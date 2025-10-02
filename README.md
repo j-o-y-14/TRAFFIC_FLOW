@@ -1,80 +1,86 @@
-# Spatio-Temporal Beam-Level Traffic Forecasting
+#  Urban Traffic Flow Prediction
 
 ##  Problem Statement
-Telecommunication networks must efficiently manage resources to maintain high-quality service. The **Spatio-Temporal Beam-Level Traffic Forecasting Challenge** aims to **predict future traffic patterns at individual network beams**, including data throughput, user counts, and resource utilization.
+Urban cellular networks face high traffic demand that can lead to congestion, slow data speeds, dropped connections, and poor user experience. Accurate traffic prediction is critical for **optimizing network resources**, **reducing latency**, **improving service quality**, and **planning future infrastructure upgrades**.
 
-Accurate forecasts help **network operators** optimize resource allocation, prevent congestion, and improve overall service quality.
-
----
-
-##  Dataset Overview
-
-The dataset contains **beam-level network metrics** collected over time, provided as CSV files:
-
-| File | Description |
-|------|-------------|
-| `traffic_DLThpVol.csv` | Downlink throughput volume per beam (amount of data transmitted). |
-| `traffic_DLThpTime.csv` | Downlink throughput time (time intervals for throughput measurements). |
-| `traffic_DLPRB.csv` | Physical Resource Block (PRB) utilization (radio resource usage per beam). |
-| `traffic_MR_number.csv` | User count per beam (number of connected users reporting measurements). |
-
-Each file represents a **time series** for multiple beams across multiple timestamps.
+This project aims to **forecast traffic volumes** at each **beam** (cellular coverage area) using historical network data including **throughput volume, throughput time, PRB utilization, and user count**. Forecasting beam-level traffic allows operators to **anticipate congestion**, **balance load**, and **ensure consistent connectivity for users**.
 
 ---
 
-##  Approach
+## 📂 Dataset
 
-### 1. Time Series Analysis
-- Forecast future values for each metric (`DLThpVol`, `DLPRB`, `MR_number`).  
-- Models:
-  - **ARIMA** (Autoregressive Integrated Moving Average)
-  - **SARIMA** (Seasonal ARIMA)
-  - **LSTM** (Long Short-Term Memory)
-  - **GRU** (Gated Recurrent Units)
-  - **Temporal CNN**
-  - **Transformers**
-  - **XGBoost / Gradient Boosting** (classical ML baseline)
-- Multi-variate models combine multiple metrics for improved prediction.
+- **Source:** [Zindi – Traffic Forecasting Challenge](https://zindi.africa/competitions/spatio-temporal-beam-level-traffic-forecasting-challenge/data)
 
-### 2. Clustering
-- Cluster beams based on usage patterns (e.g., “high traffic & high user count”).  
-- Helps network operators identify usage types and optimize configurations.
+- **Files & Description:**
+  | File | Description |
+  |------|-------------|
+  | `traffic_DLThpVol.csv` | Throughput volume (target for forecasting) |
+  | `traffic_DLThpTime.csv` | Throughput time / latency |
+  | `traffic_DLPRB.csv` | Physical Resource Block utilization |
+  | `traffic_MR_number.csv` | Number of active users |
 
-### 3. Dimensionality Reduction
-- Extract embeddings of beam traffic patterns.  
-- Apply **t-SNE**, **UMAP**, or **PCA** for 2D/3D visualization of beam similarity.
+- **Structure:**
+  - Rows = 840 **beams** (cellular coverage sectors)
+  - Columns = 2881 **time slots / timestamps**
+  - Values = float64 measurements
 
-### 4. Neural Networks
-- Build **multi-variate spatio-temporal models** using CNN + LSTM or Transformers.  
-- Input: multiple metrics per beam over time.  
-- Output: predicted traffic, PRB utilization, or user counts.
+- **Merged Dataset Example:**
+
+| beam_id | timestamp | traffic_volume | throughput_time | PRB_utilization | user_count |
+|---------|-----------|----------------|----------------|----------------|------------|
+| 0       | 0_0_0     | 0.0            | 0.0            | 0.0667         | 0.0        |
+| 1       | 0_0_0     | 0.0            | 0.0            | 0.1389         | 0.0        |
+| 2       | 0_0_0     | 0.0            | 0.0149         | 0.1589         | 0.1735     |
 
 ---
 
-##  Preprocessing Steps
+##  Methodology
 
-1. **Data Cleaning** – Handle missing timestamps or NaN values.  
-2. **Resampling** – Align all files to uniform time intervals.  
-3. **Normalization** – Scale features for neural networks (e.g., min-max or z-score).  
-4. **Feature Engineering** – Create metrics such as:
-   - Throughput per user (`DLThpVol / MR_number`)  
-   - PRB utilization percentage  
-   - Rolling averages or temporal differences  
-5. **Train-Validation-Test Split** – Typically chronological to prevent leakage.  
-6. **Time Series Checks** –  
-   - Check for **stationarity**  
-   - Check for **autocorrelation**  
-   - Check for **seasonality**  
+### 1️⃣ Preprocessing
+- Merge all datasets on `beam_id` and `timestamp` → multivariate dataset
+- Convert wide → long format for modeling
+- Generate **sliding window sequences** to create multiple training samples per beam
+- Normalize/scale features (MinMax or StandardScaler)
+- Optional feature engineering: lag features, rolling averages, time-of-day indicators
+
+### 2️⃣ Classical Models / Baselines
+- **Basic ML Models:** Random Forest, Gradient Boosting, or XGBoost  
+  - Treat each beam × timestamp row as a sample with features: `throughput_time`, `PRB_utilization`, `user_count`  
+  - Provides a **baseline performance** for comparison
+- **Time Series Models:** ARIMA / SARIMA / Prophet  
+  - **Stationarity Check:** Augmented Dickey-Fuller (ADF) test; apply differencing or log transformation if non-stationary  
+  - **Autocorrelation / Partial Autocorrelation:** Plot ACF / PACF to identify relevant lags for ARIMA/SARIMA  
+  - **Seasonality Detection:** Detect daily/weekly patterns using seasonal decomposition
+- **Evaluation Metrics:** RMSE / MAE
+
+### 3️⃣ Unsupervised Learning
+- **Clustering:** Group beams based on traffic patterns (high, medium, low congestion)
+- **Dimensionality Reduction:** PCA / t-SNE / UMAP to visualize beam traffic patterns and cluster separation
+
+### 4️⃣ Neural Networks / Deep Learning
+- **LSTM / GRU:** Capture temporal dependencies in traffic sequences  
+- Handles small dataset using **sliding windows, multivariate features, and regularization**
+
+### 5️⃣ Evaluation
+- **Metrics:** RMSE, MAE for traffic volume prediction
+- **Visualization:** Compare predicted vs actual traffic volume over time and cluster separation of beams
+
+---
+
+##  Expected Impact
+✅ **Network Optimization:** Predict congestion to allocate resources efficiently  
+✅ **User Experience:** Reduce latency and improve data throughput  
+✅ **Capacity Planning:** Anticipate high-demand periods and plan infrastructure  
+✅ **Sustainability:** Optimize energy usage in cellular networks  
 
 ---
 
 ##  Deployment
-The model will be deployed using **Streamlit** for interactive visualization of predictions and clusters.
+- **Platform:** Streamlit
+- **Features:**
+  - Upload or visualize traffic data
+  - Real-time traffic volume predictions per beam
+  - Visualize congestion clusters and patterns
 
 ---
 
-##  Real-World Impact
-
-- **Network Optimization:** Predict congestion and allocate PRBs efficiently.  
-- **Service Quality Improvement:** Reduce dropped calls and slowdowns by forecasting heavy usage periods.  
-- **Planning & Capacity Management:** Understand high-demand beams for upgrades or resource reallocation.
