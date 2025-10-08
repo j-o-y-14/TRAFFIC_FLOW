@@ -117,6 +117,37 @@ Multiple models were trained and evaluated:
 
 ## Project Workflow
 Raw Data CSVs
+   │
+   ├─> Merge & Melt → df_long
+   │
+   ├─> EDA
+   │     ├─ Heatmap (Multicollinearity)
+   │     ├─ Histograms (Distribution)
+   │     ├─ Boxplots (Outliers)
+   │     └─ Pairplots (Linearity)
+   │
+   ├─> Feature Engineering
+   │     ├─ Lags: lag1, lag2
+   │     ├─ Rolling Mean: roll3
+   │     └─ Cyclical Time: sin_time, cos_time
+   │
+   ├─> Train / Val / Test Split
+   │
+   ├─> Model Training
+   │     ├─ Random Forest (Best)
+   │     ├─ XGBoost
+   │     ├─ ARIMA / SARIMA
+   │     └─ LSTM
+   │
+   ├─> Evaluation (MSE, MAE, R²)
+   │
+   └─> Streamlit App
+         ├─ User selects Beam & Features
+         ├─ Predict Traffic Volume
+         ├─ Show Traffic Level (Low/Medium/High)
+         └─ Display Beam Stats
+
+Raw Data CSVs
 │
 ├─> Merge & Melt → df_long
 │
